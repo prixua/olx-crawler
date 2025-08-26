@@ -1,10 +1,23 @@
 package br.olx.crawler.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Produto encontrado no OLX")
 public class Produto {
+
+    @Schema(description = "Título do anúncio", example = "Yamaha MT-09 TRACER 900-GT")
     private final String titulo;
+
+    @Schema(description = "Preço do produto", example = "R$ 49.500")
     private final String preco;
+
+    @Schema(description = "Preço convertido para número (usado para ordenação)", example = "49500.0")
     private final double precoNumerico;
+
+    @Schema(description = "Link para o anúncio no OLX", example = "https://rs.olx.com.br/...")
     private final String link;
+
+    @Schema(description = "URL da imagem do produto", example = "https://img.olx.com.br/images/...")
     private final String imagem;
 
     public Produto(String titulo, String preco, String link, String imagem) {
