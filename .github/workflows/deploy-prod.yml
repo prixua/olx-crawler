@@ -1,4 +1,4 @@
-name: Build and Deploy to OCI
+name: Deploy Java App
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     environment: production
 
@@ -17,16 +17,17 @@ jobs:
       - name: Configurar JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
           distribution: 'temurin'
+          java-version: '17'
 
-      - name: Build com Maven
-        run: mvn clean package -DskipTests
+      - name: Build Gradle
+        run: ./gradlew clean build -x test
+        working-directory: ./  # se seu build.gradle estiver na raiz do repo
 
       - name: Build Docker image
         run: docker build -t minha-app .
 
-      - name: Enviar para OCI VM via SSH
+      - name: Copiar docker-compose.yml para a VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.OCI_HOST }}
