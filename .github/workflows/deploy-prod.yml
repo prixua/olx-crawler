@@ -20,15 +20,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Dar permissão de execução ao Gradle Wrapper
-        run: chmod +x ./gradlew
-
       - name: Build Gradle
         run: ./gradlew clean build -x test
-        working-directory: ./  # se seu build.gradle estiver na raiz do repo
+        working-directory: ./   # ajuste se seu build.gradle estiver em subpasta
 
       - name: Build Docker image
-        run: docker build -t minha-app .
+        run: docker build -t olx-crawler-app .
 
       - name: Copiar docker-compose.yml para a VM
         uses: appleboy/scp-action@v0.1.7
