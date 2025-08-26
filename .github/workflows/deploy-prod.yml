@@ -20,6 +20,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Dar permissão de execução ao Gradle Wrapper
+        run: chmod +x ./gradlew
+
       - name: Build Gradle
         run: ./gradlew clean build -x test
         working-directory: ./  # se seu build.gradle estiver na raiz do repo
