@@ -30,6 +30,14 @@ jobs:
       - name: Build Docker image
         run: docker build -t olx-crawler-app .
 
+      - name: Criar diretório na VM
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          script: mkdir -p ~/app
+
       - name: Copiar docker-compose.yml para a VM
         uses: appleboy/scp-action@v0.1.7
         with:
