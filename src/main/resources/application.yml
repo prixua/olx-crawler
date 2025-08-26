@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: olx-crawler
+  webflux:
+    base-path: /
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  info:
+    title: OLX Crawler API
+    description: API para buscar motos Yamaha MT-09 Tracer no OLX do Rio Grande do Sul
+    version: 1.0.0
+    contact:
+      name: OLX Crawler Team
+      email: suporte@olxcrawler.com
+  servers:
+    - url: http://localhost:8080
+      description: Servidor de desenvolvimento
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    br.olx.crawler: INFO
+    org.springframework: WARN
+    reactor.netty: WARN
