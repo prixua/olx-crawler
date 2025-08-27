@@ -1,4 +1,4 @@
-name: Deploy Java App
+name: Deploy OLX Crawler
 
 on:
   push:
@@ -38,13 +38,13 @@ jobs:
           key: ${{ secrets.OCI_SSH_KEY }}
           script: mkdir -p ~/app
 
-      - name: Copiar docker-compose.yml para a VM
+      - name: Copiar arquivos para a VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.OCI_HOST }}
           username: ${{ secrets.OCI_USER }}
           key: ${{ secrets.OCI_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "build/libs/*.jar,Dockerfile,docker-compose.yml"
           target: "~/app"
 
       - name: Deploy via SSH
@@ -55,5 +55,5 @@ jobs:
           key: ${{ secrets.OCI_SSH_KEY }}
           script: |
             cd ~/app
-            docker-compose down
+            docker-compose down || true
             docker-compose up -d --build
