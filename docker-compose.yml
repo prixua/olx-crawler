@@ -21,8 +21,24 @@ services:
       - "8080:8080"
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/crawler?authSource=admin
+      DUCKDNS_DOMAIN: ${DUCKDNS_DOMAIN}
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
     depends_on:
       - mongodb
+
+  duckdns:
+    image: alpine:3.18
+    container_name: duckdns-updater
+    restart: always
+    environment:
+      DUCKDNS_DOMAIN: ${DUCKDNS_DOMAIN}
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
+    command: >
+      sh -c "while true; do
+        echo 'Updating DuckDNS...';
+        wget -qO- 'https://www.duckdns.org/update?domains=${DUCKDNS_DOMAIN}&token=${DUCKDNS_TOKEN}&ip=';
+        sleep 300;
+      done"
 
 volumes:
   mongo_data:
