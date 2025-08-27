@@ -1,12 +1,12 @@
 package br.olx.crawler.controller;
 
+import br.olx.crawler.controller.docs.OlxCrawlerApi;
 import br.olx.crawler.dto.Produto;
 import br.olx.crawler.service.OlxCrawlerService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,15 +17,16 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/crawler")
-@Tag(name = "OLX Crawler", description = "API para buscar motos no OLX do Rio Grande do Sul")
+@Tag(name = "OLX Crawler", description = "API para buscar produtos")
 @RequiredArgsConstructor
-public class OlxCrawlerController implements OlxCrawlerAPi {
+public class OlxCrawlerController implements OlxCrawlerApi {
 
     private final OlxCrawlerService olxCrawlerService;
 
     @Override
     @GetMapping(value = "/produtos", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<List<Produto>> buscarMotos(
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<List<Produto>> lookForProducts(
             @RequestParam(value = "term", defaultValue = "tracer") String term,
             @RequestParam(value = "maxPages", defaultValue = "10") Integer maxPages) {
 
@@ -37,7 +38,7 @@ public class OlxCrawlerController implements OlxCrawlerAPi {
             return Mono.error(new IllegalArgumentException("term não pode estar vazio"));
         }
 
-        return olxCrawlerService.buscarProdutos(term.trim(), maxPages);
+        return olxCrawlerService.lookForProducts(term.trim(), maxPages);
     }
 
     @Override

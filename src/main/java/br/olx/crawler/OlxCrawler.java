@@ -1,21 +1,19 @@
 package br.olx.crawler;
 
 import br.olx.crawler.service.OlxCrawlerService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 // Classe opcional para executar o crawler via linha de comando
 @Component
-public class OlxCrawler implements CommandLineRunner {
+public class OlxCrawler /*implements CommandLineRunner*/ {
 
-    @Autowired
+//    @Autowired
     private OlxCrawlerService olxCrawlerService;
 
-    @Override
+//    @Override
     public void run(String... args) throws Exception {
         System.out.println("Executando crawler via linha de comando...");
-        olxCrawlerService.buscarProdutos()
+        olxCrawlerService.lookForProducts()
                 .subscribe(produtos -> {
                     System.out.println("=== RESULTADOS (Top 10) ===");
                     for (int i = 0; i < produtos.size(); i++) {

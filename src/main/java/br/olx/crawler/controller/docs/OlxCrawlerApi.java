@@ -1,4 +1,4 @@
-package br.olx.crawler.controller;
+package br.olx.crawler.controller.docs;
 
 import br.olx.crawler.dto.Produto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,21 +16,18 @@ import java.util.List;
  * Interface para o controlador de crawling do OLX
  * Define os endpoints da API REST
  */
-public interface OlxCrawlerAPi {
+public interface OlxCrawlerApi {
 
     @Operation(
-        summary = "Buscar motos no OLX",
-        description = "Realiza crawling no site OLX para buscar motos Yamaha MT-09 no estado do Rio Grande do Sul. " +
-                     "Permite filtrar por termo específico e definir quantas páginas percorrer. " +
-                     "O OLX usa paginação fixa de 10 produtos por página. " +
-                     "Retorna os 10 produtos mais baratos ordenados por preço.",
+        summary = "Buscar produtos no OLX",
+        description = "Realiza crawling no site OLX para buscar produtos.",
         tags = {"Crawling", "Produtos"}
     )
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200",
             description = "Lista de produtos encontrados com sucesso. " +
-                         "Produtos únicos (sem duplicatas) ordenados por preço crescente.",
+                         "Produtos únicos (sem duplicatas) ordenados por preço decrescente.",
             content = @Content(
                 mediaType = "application/json",
                 schema = @Schema(implementation = Produto.class)
@@ -69,7 +66,7 @@ public interface OlxCrawlerAPi {
             )
         )
     })
-    Mono<List<Produto>> buscarMotos(
+    Mono<List<Produto>> lookForProducts(
         @Parameter(
             description = "Termo de busca para filtrar produtos. " +
                          "Busca case-insensitive no título dos produtos.",

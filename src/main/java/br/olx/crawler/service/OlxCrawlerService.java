@@ -3,7 +3,6 @@ package br.olx.crawler.service;
 import br.olx.crawler.dto.Produto;
 import br.olx.crawler.util.SystemOutUtil;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
@@ -26,7 +25,7 @@ public class OlxCrawlerService {
     private static final int REQUESTS_INTERVAL_IN_MS = 2000;
     private static final String BASE_URL = "https://www.olx.com.br/autos-e-pecas/motos/yamaha/mt-09/estado-rs";
 
-    public Mono<List<Produto>> buscarProdutos(String term, Integer maxPages) {
+    public Mono<List<Produto>> lookForProducts(String term, Integer maxPages) {
         return Mono.fromCallable(() -> {
                     SystemOutUtil.configureConsoleEncoding();
                     try {
@@ -98,8 +97,8 @@ public class OlxCrawlerService {
     }
 
     // Método de compatibilidade
-    public Mono<List<Produto>> buscarProdutos() {
-        return buscarProdutos("tracer", MAX_PAGES);
+    public Mono<List<Produto>> lookForProducts() {
+        return lookForProducts("tracer", MAX_PAGES);
     }
 
     private List<Produto> extrairProdutosDoHtml(String html, String term) {
