@@ -18,7 +18,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27017
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_HOST: mongodb  # Nome do serviço MongoDB
       DUCKDNS_DOMAIN: ${DUCKDNS_DOMAIN}
       DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
     depends_on:
