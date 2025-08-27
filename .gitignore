@@ -48,5 +48,5 @@ bin/
 /.idea/vcs.xml
 /build/
 /.gradle/
-/.env
+/.env.production
 /.idea/inspectionProfiles/Project_Default.xml
