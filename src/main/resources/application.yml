@@ -27,8 +27,6 @@ spring:
       allow-credentials: true
   data:
     mongodb:
-#      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017}
-      # Tentando conectar no banco admin primeiro
       uri: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST:127.0.0.1}:27017/admin
       database: crawler
 
