@@ -2,18 +2,29 @@ package br.olx.crawler.controller;
 
 import br.olx.crawler.controller.docs.OlxCrawlerApi;
 import br.olx.crawler.dto.Produto;
+import br.olx.crawler.service.CrawlerScheduledService;
+import br.olx.crawler.service.LinkService;
 import br.olx.crawler.service.OlxCrawlerService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 @RestController
 @RequestMapping("/api/v1/crawler")
@@ -22,6 +33,8 @@ import java.util.List;
 public class OlxCrawlerController implements OlxCrawlerApi {
 
     private final OlxCrawlerService olxCrawlerService;
+    private final LinkService linkService;
+    private final CrawlerScheduledService crawlerScheduledService;
 
     @Override
     @GetMapping(value = "/produtos", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -45,5 +58,28 @@ public class OlxCrawlerController implements OlxCrawlerApi {
     @GetMapping(value = "/health", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<String> health() {
         return Mono.just("OLX Crawler Service is running!");
+    }
+
+    @PostMapping(value = "/link", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<?> registerOlxLink(@RequestBody @Valid @NotEmpty String url) {
+//        if (isEmpty(url)) {
+//            return Mono.just(ResponseEntity.badRequest().body("URL não pode ser vazia"));
+//        }
+        return linkService.registerLink(url.trim())
+                .map(link -> ResponseEntity.ok().body("URL cadastrada com sucesso"))
+                .onErrorResume(ResponseStatusException.class, ex ->
+                        Mono.just(ResponseEntity.status(ex.getStatusCode()).body(ex.getReason()))
+                );
+    }
+
+    @GetMapping(value = "/send-mail", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<ResponseEntity<String>> sendTestEmail() {
+        return crawlerScheduledService.run()
+                .thenReturn(ResponseEntity.ok().body("E-mail de teste enviado com sucesso"))
+                .onErrorResume(e ->
+                        Mono.just(ResponseEntity.status(500).body("Erro ao enviar e-mail de teste: " + e.getMessage()))
+                );
     }
 }

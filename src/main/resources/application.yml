@@ -29,6 +29,17 @@ spring:
     mongodb:
       uri: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST:127.0.0.1}:27017/admin
       database: crawler
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 security:
   jwt:
@@ -73,3 +84,9 @@ logging:
     org.springframework: WARN
     reactor.netty: WARN
     spring.data.mongodb.core: DEBUG
+
+crawler:
+  schedule: "*/10 * * * *"
+  email:
+    from: ${CRAWLER_EMAIL_FROM:${SPRING_MAIL_USERNAME}}
+    to: ${CRAWLER_EMAIL_TO:${SPRING_MAIL_USERNAME}}

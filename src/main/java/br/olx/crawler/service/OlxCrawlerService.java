@@ -68,9 +68,9 @@ public class OlxCrawlerService {
                                         hasMore = false;
                                     }
                                 } else if (response.statusCode() == 403) {
-                                    Thread.sleep(5000);
+                                    Thread.sleep(1000);
                                     if (page == 1) {
-                                        Thread.sleep(3000);
+                                        Thread.sleep(1000);
                                         continue;
                                     } else {
                                         hasMore = false;
@@ -93,7 +93,7 @@ public class OlxCrawlerService {
                     }
                 })
                 .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
-                .timeout(Duration.ofMinutes(5));
+                .timeout(Duration.ofMinutes(3));
     }
 
     // Método de compatibilidade
@@ -190,5 +190,33 @@ public class OlxCrawlerService {
             }
         }
         return "";
+    }
+
+    public List<Produto> crawlerPorUri(String uri) {
+        SystemOutUtil.configureConsoleEncoding();
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .followRedirects(HttpClient.Redirect.NORMAL)
+                    .build();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(uri))
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+                    .header("Accept-Language", "pt-BR,pt;q=0.9,en;q=0.8")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("Referer", "https://www.olx.com.br/")
+                    .header("Cache-Control", "max-age=0")
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                String html = response.body();
+                return extrairProdutosDoHtml(html, ""); // Busca todos os produtos, sem filtro por termo
+            } else {
+                throw new RuntimeException("Erro ao buscar URI: status code " + response.statusCode());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao fazer crawler na URI", e);
+        }
     }
 }
