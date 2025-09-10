@@ -1,10 +1,11 @@
 package br.olx.crawler.service;
 
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -20,22 +21,22 @@ public class EmailService {
     @Value("${crawler.email.from}")
     private String from;
 
-    public Mono<Void> sendSummaryEmail(String corpo) {
+    public Mono<Void> sendSummaryEmail(String corpoHtml) {
         return Mono.fromRunnable(() -> {
             String subject = "Resumo dos produtos dos links monitorados";
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(to);
-            message.setFrom(from);
-            message.setSubject(subject);
-            message.setText(corpo);
-            if (mailSender instanceof org.springframework.mail.javamail.JavaMailSenderImpl impl) {
-                log.info("[EMAIL DEBUG] Tentando autenticar com usuário: {} e remetente: {}", impl.getUsername(), from);
-                log.info("[EMAIL DEBUG] Senha configurada: {}", impl.getPassword());
-            } else {
-                log.warn("[EMAIL DEBUG] mailSender não é uma instância de JavaMailSenderImpl, não é possível logar credenciais.");
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setTo(to);
+                helper.setFrom(from);
+                helper.setSubject(subject);
+                helper.setText(corpoHtml, true);
+                mailSender.send(message);
+                log.info("E-mail resumo enviado para {}", to);
+            } catch (Exception e) {
+                log.error("Erro ao enviar e-mail HTML", e);
+                throw new RuntimeException(e);
             }
-            mailSender.send(message);
-            log.info("E-mail resumo enviado para {}", to);
         });
     }
 }

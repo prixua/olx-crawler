@@ -8,8 +8,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 @RequiredArgsConstructor
 @Slf4j
 public class OlxCrawlerApplication {
@@ -37,9 +39,9 @@ public class OlxCrawlerApplication {
                 dotenv.entries().forEach(entry -> {
                     System.setProperty(entry.getKey(), entry.getValue());
                 });
-                System.out.println("Total de " + dotenv.entries().size() + " variáveis carregadas do .env.production");
+                System.out.println("Total de " + dotenv.entries().size() + " variaveis carregadas do .env.production");
             } else {
-                System.out.println("Arquivo .env.production não encontrado. Usando variáveis de ambiente do sistema.");
+                System.out.println("Arquivo .env.production nao encontrado. Usando variaveis de ambiente do sistema.");
             }
 
             // Verifica se as variáveis essenciais estão disponíveis (seja do arquivo ou do sistema)

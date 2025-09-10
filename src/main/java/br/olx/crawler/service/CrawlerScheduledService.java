@@ -27,32 +27,39 @@ public class CrawlerScheduledService {
     @Scheduled(cron = "#{@crawlerScheduleProperties.schedule}")
     public void runCrawlerJob() {
         linkRepository.findAll()
-            .filter(Link::isEnabled)
-            .collectList()
-            .flatMap(links -> {
-                Map<String, List<Produto>> resultados = new LinkedHashMap<>();
-                for (Link link : links) {
-                    List<Produto> produtos = olxCrawlerService.crawlerPorUri(link.getUri());
-                    List<Produto> top5 = produtos.stream()
-                        .sorted(Comparator.comparingDouble(Produto::getPrecoNumerico))
-                        .limit(5)
-                        .collect(Collectors.toList());
-                    resultados.put(link.getUri(), top5);
-                }
-                StringBuilder corpo = new StringBuilder();
-                for (Map.Entry<String, List<Produto>> entry : resultados.entrySet()) {
-                    corpo.append(entry.getKey()).append(" (");
-                    List<Produto> produtos = entry.getValue();
-                    for (int i = 0; i < produtos.size(); i++) {
-                        Produto p = produtos.get(i);
-                        corpo.append(p.getTitulo());
-                        if (i < produtos.size() - 1) corpo.append(", ");
+                .filter(Link::isEnabled)
+                .collectList()
+                .flatMap(links -> {
+                    Map<String, List<Produto>> resultados = new LinkedHashMap<>();
+                    for (Link link : links) {
+                        List<Produto> produtos = olxCrawlerService.crawlerPorUri(link.getUri());
+                        List<Produto> top5 = produtos.stream()
+                                .sorted(Comparator.comparingDouble(Produto::getPrecoNumerico))
+                                .limit(5)
+                                .collect(Collectors.toList());
+                        resultados.put(link.getUri(), top5);
                     }
-                    corpo.append("); ");
-                }
-                return emailService.sendSummaryEmail(corpo.toString());
-            })
-            .doOnError(e -> log.error("Erro no job de crawler", e))
+                    StringBuilder corpo = new StringBuilder();
+                    corpo.append("<html><body>");
+                    for (Map.Entry<String, List<Produto>> entry : resultados.entrySet()) {
+                        String link = entry.getKey();
+                        List<Produto> produtos = entry.getValue();
+                        corpo.append("<h3><a href='" + link + "' target='_blank'>" + link + "</a></h3>");
+                        corpo.append("<table border='1' cellpadding='5' cellspacing='0' style='border-collapse:collapse;'>");
+                        corpo.append("<tr><th>Nome do anúncio</th><th>Preço</th><th>Link</th></tr>");
+                        for (Produto p : produtos) {
+                            corpo.append("<tr>");
+                            corpo.append("<td>" + p.getTitulo() + "</td>");
+                            corpo.append("<td>" + p.getPreco() + "</td>");
+                            corpo.append("<td><a href='" + p.getLink() + "' target='_blank'>Ver anúncio</a></td>");
+                            corpo.append("</tr>");
+                        }
+                        corpo.append("</table><br/>");
+                    }
+                    corpo.append("</body></html>");
+                    return emailService.sendSummaryEmail(corpo.toString());
+                })
+                .doOnError(e -> log.error("Erro no job de crawler", e))
             .subscribe();
     }
 
@@ -71,16 +78,23 @@ public class CrawlerScheduledService {
                         resultados.put(link.getUri(), top5);
                     }
                     StringBuilder corpo = new StringBuilder();
+                    corpo.append("<html><body>");
                     for (Map.Entry<String, List<Produto>> entry : resultados.entrySet()) {
-                        corpo.append(entry.getKey()).append(" (");
+                        String link = entry.getKey();
                         List<Produto> produtos = entry.getValue();
-                        for (int i = 0; i < produtos.size(); i++) {
-                            Produto p = produtos.get(i);
-                            corpo.append(p.getTitulo());
-                            if (i < produtos.size() - 1) corpo.append(", ");
+                        corpo.append("<h3><a href='" + link + "' target='_blank'>" + link + "</a></h3>");
+                        corpo.append("<table border='1' cellpadding='5' cellspacing='0' style='border-collapse:collapse;'>");
+                        corpo.append("<tr><th>Nome do anúncio</th><th>Preço</th><th>Link</th></tr>");
+                        for (Produto p : produtos) {
+                            corpo.append("<tr>");
+                            corpo.append("<td>" + p.getTitulo() + "</td>");
+                            corpo.append("<td>" + p.getPreco() + "</td>");
+                            corpo.append("<td><a href='" + p.getLink() + "' target='_blank'>Ver anúncio</a></td>");
+                            corpo.append("</tr>");
                         }
-                        corpo.append("); ");
+                        corpo.append("</table><br/>");
                     }
+                    corpo.append("</body></html>");
                     return emailService.sendSummaryEmail(corpo.toString());
                 })
                 .doOnError(e -> log.error("Erro no job de crawler", e));
