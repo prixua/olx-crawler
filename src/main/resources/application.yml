@@ -86,7 +86,7 @@ logging:
     spring.data.mongodb.core: DEBUG
 
 crawler:
-  schedule: "0 */1 * * * *"
+  schedule: "0 0 9 * * MON-FRI"
   email:
     from: ${CRAWLER_EMAIL_FROM:${SPRING_MAIL_USERNAME}}
     to: ${CRAWLER_EMAIL_TO:${SPRING_MAIL_USERNAME}}
