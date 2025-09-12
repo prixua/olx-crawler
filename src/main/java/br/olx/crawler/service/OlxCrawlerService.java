@@ -15,6 +15,8 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,8 +24,23 @@ import java.util.regex.Pattern;
 public class OlxCrawlerService {
 
     private static final int MAX_PAGES = 20;
-    private static final int REQUESTS_INTERVAL_IN_MS = 2000;
     private static final String BASE_URL = "https://www.olx.com.br/autos-e-pecas/motos/yamaha/mt-09/estado-rs";
+
+    private static final List<String> USER_AGENTS = List.of(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Safari/605.1.15",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0"
+    );
+    private static final List<String> ACCEPT_LANGUAGES = List.of(
+            "pt-BR,pt;q=0.9,en;q=0.8",
+            "en-US,en;q=0.9,pt;q=0.8",
+            "es-ES,es;q=0.9,en;q=0.8"
+    );
+    private static final int MIN_REQUESTS_INTERVAL_MS = 30000; // 30s
+    private static final int MAX_REQUESTS_INTERVAL_MS = 60000; // 60s
+    private static final int MAX_RETRIES = 3;
+    private static final Random RANDOM = new Random();
 
     public Mono<List<Produto>> lookForProducts(String term, Integer maxPages) {
         return Mono.fromCallable(() -> {
@@ -37,57 +54,63 @@ public class OlxCrawlerService {
                         Map<String, Produto> produtosUnicos = new LinkedHashMap<>();
 
                         while (hasMore && page <= maxPages) {
-                            // OLX usa paginação de 10 produtos por página (fixo)
                             String url = BASE_URL + "?o=" + page;
-
-                            HttpRequest request = HttpRequest.newBuilder()
-                                    .uri(URI.create(url))
-                                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-                                    .header("Accept-Language", "pt-BR,pt;q=0.9,en;q=0.8")
-                                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                                    .header("Referer", "https://www.olx.com.br/")
-                                    .header("Cache-Control", "max-age=0")
-                                    .build();
-
-                            try {
-                                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-                                if (response.statusCode() == 200) {
-                                    String html = response.body();
-                                    List<Produto> produtosPagina = extrairProdutosDoHtml(html, term);
-
-                                    if (!produtosPagina.isEmpty()) {
-                                        for (Produto produto : produtosPagina) {
-                                            if (!produtosUnicos.containsKey(produto.getLink())) {
-                                                produtosUnicos.put(produto.getLink(), produto);
+                            int retryCount = 0;
+                            boolean success = false;
+                            while (!success && retryCount < MAX_RETRIES) {
+                                String userAgent = USER_AGENTS.get(RANDOM.nextInt(USER_AGENTS.size()));
+                                String acceptLanguage = ACCEPT_LANGUAGES.get(RANDOM.nextInt(ACCEPT_LANGUAGES.size()));
+                                HttpRequest request = HttpRequest.newBuilder()
+                                        .uri(URI.create(url))
+                                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+                                        .header("Accept-Language", acceptLanguage)
+                                        .header("User-Agent", userAgent)
+                                        .header("Referer", "https://www.olx.com.br/")
+                                        .header("Cache-Control", "max-age=0")
+                                        .header("Connection", "keep-alive")
+                                        .build();
+                                try {
+                                    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                                    if (response.statusCode() == 200) {
+                                        String html = response.body();
+                                        List<Produto> produtosPagina = extrairProdutosDoHtml(html, term);
+                                        if (!produtosPagina.isEmpty()) {
+                                            for (Produto produto : produtosPagina) {
+                                                if (!produtosUnicos.containsKey(produto.getLink())) {
+                                                    produtosUnicos.put(produto.getLink(), produto);
+                                                }
                                             }
+                                            page++;
+                                            int delay = MIN_REQUESTS_INTERVAL_MS + RANDOM.nextInt(MAX_REQUESTS_INTERVAL_MS - MIN_REQUESTS_INTERVAL_MS + 1);
+                                            TimeUnit.MILLISECONDS.sleep(delay);
+                                        } else {
+                                            hasMore = false;
                                         }
-                                        page++;
-                                        Thread.sleep(REQUESTS_INTERVAL_IN_MS);
+                                        success = true;
+                                    } else if (response.statusCode() == 403) {
+                                        retryCount++;
+                                        int backoff = (int) Math.pow(2, retryCount) * 1000 + RANDOM.nextInt(2000);
+                                        TimeUnit.MILLISECONDS.sleep(backoff);
+                                        if (retryCount >= MAX_RETRIES) {
+                                            hasMore = false;
+                                        }
                                     } else {
                                         hasMore = false;
+                                        success = true;
                                     }
-                                } else if (response.statusCode() == 403) {
-                                    Thread.sleep(1000);
-                                    if (page == 1) {
-                                        Thread.sleep(1000);
-                                        continue;
-                                    } else {
+                                } catch (Exception e) {
+                                    retryCount++;
+                                    int backoff = (int) Math.pow(2, retryCount) * 1000 + RANDOM.nextInt(2000);
+                                    TimeUnit.MILLISECONDS.sleep(backoff);
+                                    if (retryCount >= MAX_RETRIES) {
                                         hasMore = false;
                                     }
-                                } else {
-                                    hasMore = false;
                                 }
-                            } catch (Exception e) {
-                                hasMore = false;
                             }
                         }
-
                         List<Produto> todosProdutos = new ArrayList<>(produtosUnicos.values());
                         todosProdutos.sort(Comparator.comparingDouble(Produto::getPrecoNumerico));
-
                         return todosProdutos.stream().limit(10).toList();
-
                     } catch (Exception e) {
                         throw new RuntimeException("Erro ao buscar produtos", e);
                     }

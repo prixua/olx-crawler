@@ -34,6 +34,7 @@ public class CrawlerScheduledService {
 
     private Mono<Void> processAndSendSummaryEmail() {
 
+        log.info("Iniciando job de crawler para envio de e-mail...");
         return linkRepository.findAll()
                 .filter(Link::isEnabled)
                 .collectList()
