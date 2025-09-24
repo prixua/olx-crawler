@@ -25,6 +25,9 @@ public class CrawlerScheduledService {
     private final EmailService emailService;
     private final WhatsappMessageService whatsappMessageService;
 
+    // Constantes para controle de crawler
+    private static final int TOP_PRODUCTS_COUNT = 5;
+
     @Scheduled(cron = "#{@crawlerScheduleProperties.schedule}")
     public void runCrawlerJob() {
         processAndSendSummaryEmail().subscribe();
@@ -44,7 +47,7 @@ public class CrawlerScheduledService {
                         List<Produto> produtos = olxCrawlerService.crawlerPorUri(link.getUri());
                         List<Produto> top5 = produtos.stream()
                                 .sorted(Comparator.comparingDouble(Produto::getPrecoNumerico))
-                                .limit(5)
+                                .limit(TOP_PRODUCTS_COUNT)
                                 .collect(Collectors.toList());
                         resultados.put(link.getUri(), top5);
                     }
@@ -91,7 +94,7 @@ public class CrawlerScheduledService {
                                     List<Produto> produtos = olxCrawlerService.crawlerPorUri(link.getUri());
                                     List<Produto> top5 = produtos.stream()
                                             .sorted(Comparator.comparingDouble(Produto::getPrecoNumerico))
-                                            .limit(5)
+                                            .limit(TOP_PRODUCTS_COUNT)
                                             .toList();
 
                                     if (top5.isEmpty()) {
