@@ -10,6 +10,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - mongo_data:/data/db
+    networks:
+      - olx-crawler-network
 
   app:
     build: .
@@ -27,8 +29,25 @@ services:
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
       CRAWLER_EMAIL_FROM: ${CRAWLER_EMAIL_FROM}
       CRAWLER_EMAIL_TO: ${CRAWLER_EMAIL_TO}
+      WHATSAPP_API_URL: http://whatsapp-api:3500  # URL interna para WhatsApp API
     depends_on:
       - mongodb
+      - whatsapp-api
+    networks:
+      - olx-crawler-network
+
+  whatsapp-api:
+    image: prixua/whatsapp-api:latest
+    container_name: whatsapp-api
+    restart: always
+    ports:
+      - "3500:3500"  # Porta para acessar externamente se necessário
+    environment:
+      NODE_ENV: production
+    volumes:
+      - whatsapp_sessions:/app/sessions  # Persistir sessões do WhatsApp
+    networks:
+      - olx-crawler-network
 
   duckdns:
     image: alpine:3.18
@@ -43,7 +62,14 @@ services:
         wget -qO- 'https://www.duckdns.org/update?domains=${DUCKDNS_DOMAIN}&token=${DUCKDNS_TOKEN}&ip=';
         sleep 300;
       done"
+    networks:
+      - olx-crawler-network
 
 volumes:
   mongo_data:
     external: true
+  whatsapp_sessions:  # Volume para persistir sessões do WhatsApp
+
+networks:
+  olx-crawler-network:
+    driver: bridge
