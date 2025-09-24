@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,8 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-
-import static org.apache.commons.lang3.StringUtils.isEmpty;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/crawler")
@@ -63,9 +61,6 @@ public class OlxCrawlerController implements OlxCrawlerApi {
     @PostMapping(value = "/link", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public Mono<?> registerOlxLink(@RequestBody @Valid @NotEmpty String url) {
-//        if (isEmpty(url)) {
-//            return Mono.just(ResponseEntity.badRequest().body("URL não pode ser vazia"));
-//        }
         return linkService.registerLink(url.trim())
                 .map(link -> ResponseEntity.ok().body("URL cadastrada com sucesso"))
                 .onErrorResume(ResponseStatusException.class, ex ->
@@ -80,6 +75,17 @@ public class OlxCrawlerController implements OlxCrawlerApi {
                 .thenReturn(ResponseEntity.ok().body("E-mail de teste enviado com sucesso"))
                 .onErrorResume(e ->
                         Mono.just(ResponseEntity.status(500).body("Erro ao enviar e-mail de teste: " + e.getMessage()))
+                );
+    }
+
+    @Override
+    @PostMapping(value = "/send-message", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<ResponseEntity<String>> sendMessage() {
+        return crawlerScheduledService.runWhatsappCrawler()
+                .thenReturn(ResponseEntity.ok("Top 5 anúncios enviados via WhatsApp com sucesso"))
+                .onErrorResume(e ->
+                        Mono.just(ResponseEntity.status(500).body("Erro ao enviar mensagens: " + e.getMessage()))
                 );
     }
 }
