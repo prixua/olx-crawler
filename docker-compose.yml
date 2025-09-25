@@ -41,7 +41,7 @@ services:
     container_name: whatsapp-api
     restart: always
     ports:
-      - "3500:3500"  # Porta para acessar externamente se necessário
+      - "3500:3500"  # Porta correta baseada no docker ps
     environment:
       NODE_ENV: production
     volumes:

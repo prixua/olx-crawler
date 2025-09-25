@@ -91,3 +91,7 @@ crawler:
   email:
     from: ${CRAWLER_EMAIL_FROM:${SPRING_MAIL_USERNAME}}
     to: ${CRAWLER_EMAIL_TO:${SPRING_MAIL_USERNAME}}
+
+whatsapp:
+  api:
+    url: ${WHATSAPP_API_URL:http://localhost:3500}
