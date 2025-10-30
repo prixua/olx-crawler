@@ -26,7 +26,7 @@ public class CrawlerScheduledService {
     private final WhatsappMessageService whatsappMessageService;
 
     // Constantes para controle de crawler
-    private static final int TOP_PRODUCTS_COUNT = 5;
+    private static final int TOP_PRODUCTS_COUNT = 10;
 
     @Scheduled(cron = "#{@crawlerScheduleProperties.schedule}")
     public void runCrawlerJob() {
@@ -45,11 +45,11 @@ public class CrawlerScheduledService {
                     Map<String, List<Produto>> resultados = new LinkedHashMap<>();
                     for (Link link : links) {
                         List<Produto> produtos = olxCrawlerService.crawlerPorUri(link.getUri());
-                        List<Produto> top5 = produtos.stream()
+                        List<Produto> top10 = produtos.stream()
                                 .sorted(Comparator.comparingDouble(Produto::getPrecoNumerico))
                                 .limit(TOP_PRODUCTS_COUNT)
                                 .collect(Collectors.toList());
-                        resultados.put(link.getUri(), top5);
+                        resultados.put(link.getUri(), top10);
                     }
                     StringBuilder corpo = new StringBuilder();
                     corpo.append("<html><body>");
@@ -92,20 +92,20 @@ public class CrawlerScheduledService {
 
                                 try {
                                     List<Produto> produtos = olxCrawlerService.crawlerPorUri(link.getUri());
-                                    List<Produto> top5 = produtos.stream()
-                                            .sorted(Comparator.comparingDouble(Produto::getPrecoNumerico))
-                                            .limit(TOP_PRODUCTS_COUNT)
-                                            .toList();
+                                        List<Produto> top10 = produtos.stream()
+                                                .sorted(Comparator.comparingDouble(Produto::getPrecoNumerico))
+                                                .limit(TOP_PRODUCTS_COUNT)
+                                                .toList();
 
-                                    if (top5.isEmpty()) {
+                                        if (top10.isEmpty()) {
                                         log.warn("Nenhum produto encontrado para o link: {}", link.getUri());
                                         return Mono.just(false); // Continua processamento mesmo sem produtos
                                     }
 
                                     StringBuilder mensagem = new StringBuilder();
-                                    mensagem.append("*Top 5 Anúncios*\n");
+                                    mensagem.append("*Top 10 Anúncios*\n");
 
-                                    for (Produto p : top5) {
+                                    for (Produto p : top10) {
                                         mensagem.append("*").append(p.getTitulo()).append("*\n");
                                         mensagem.append("💰 Preço: ").append(p.getPreco()).append("\n");
                                         mensagem.append("🔗 ").append(p.getLink()).append("\n\n");

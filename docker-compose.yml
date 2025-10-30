@@ -29,25 +29,25 @@ services:
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
       CRAWLER_EMAIL_FROM: ${CRAWLER_EMAIL_FROM}
       CRAWLER_EMAIL_TO: ${CRAWLER_EMAIL_TO}
-      WHATSAPP_API_URL: http://whatsapp-api:3500  # URL interna para WhatsApp API
+      # WHATSAPP_API_URL: http://whatsapp-api:3500  # URL interna para WhatsApp API
     depends_on:
       - mongodb
-      - whatsapp-api
+      # - whatsapp-api
     networks:
       - olx-crawler-network
 
-  whatsapp-api:
-    image: prixua/whatsapp-api:latest
-    container_name: whatsapp-api
-    restart: always
-    ports:
-      - "3500:3500"  # Porta correta baseada no docker ps
-    environment:
-      NODE_ENV: production
-    volumes:
-      - whatsapp_sessions:/app/sessions  # Persistir sessões do WhatsApp
-    networks:
-      - olx-crawler-network
+  # whatsapp-api:
+  #   image: prixua/whatsapp-api:latest
+  #   container_name: whatsapp-api
+  #   restart: always
+  #   ports:
+  #     - "3500:3500"  # Porta correta baseada no docker ps
+  #   environment:
+  #     NODE_ENV: production
+  #   volumes:
+  #     - whatsapp_sessions:/app/sessions  # Persistir sessões do WhatsApp
+  #   networks:
+  #     - olx-crawler-network
 
   duckdns:
     image: alpine:3.18
@@ -68,7 +68,7 @@ services:
 volumes:
   mongo_data:
     external: true
-  whatsapp_sessions:  # Volume para persistir sessões do WhatsApp
+  # whatsapp_sessions:  # Volume para persistir sessões do WhatsApp
 
 networks:
   olx-crawler-network:

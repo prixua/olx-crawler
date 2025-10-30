@@ -119,7 +119,7 @@ public class OlxCrawlerService {
                     }
                 })
                 .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
-                .timeout(Duration.ofMinutes(3));
+                .timeout(Duration.ofMinutes(5));
     }
 
     // Método de compatibilidade

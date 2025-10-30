@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/crawler")
@@ -83,7 +82,7 @@ public class OlxCrawlerController implements OlxCrawlerApi {
     @PreAuthorize("hasRole('ADMIN')")
     public Mono<ResponseEntity<String>> sendMessage() {
         return crawlerScheduledService.runWhatsappCrawler()
-                .thenReturn(ResponseEntity.ok("Top 5 anúncios enviados via WhatsApp com sucesso"))
+                .thenReturn(ResponseEntity.ok("Top 10 anúncios enviados via WhatsApp com sucesso"))
                 .onErrorResume(e ->
                         Mono.just(ResponseEntity.status(500).body("Erro ao enviar mensagens: " + e.getMessage()))
                 );
